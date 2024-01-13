@@ -1,0 +1,4 @@
+-i cornell_box.obj
+-i teapot.obj
+-pointlight 213 300 227 100000 100000 100000
+-vp 278 273 -800 -vi 300 273 0 -vu 0 1 0 -fov 50
