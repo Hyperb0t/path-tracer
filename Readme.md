@@ -17,16 +17,18 @@ the jar should be run with the following command:
 ``` java -jar target/path-tracer-1.0.jar```
 ### Run parameters
 ```
---output, -o 	 default output.hdr
-output filename
---ip, -i 	 default localhost
-address of Renderer to connect to in Scene mode
---scene, -s 	 default models/cornell_box.obj
-path to scene obj file
---port, -p 	 default 50051
-port for Renderer mode to listen or Scene mode to connect to
---help, -h 	 default false
-display this help message
 --mode, -m 	 default Standalone
 one of: Standalone, Scene, Renderer
+--algorithm, -a 	 default PT
+Rendering algorith for standalone or renderer mode, one of: pt, ptopfd
+--ip, -i 	 default localhost
+address of Renderer to connect to in Scene mode
+--port, -p 	 default 50051
+port for Renderer mode to listen or Scene mode to connect to
+--output, -o 	 default output.hdr
+output filename
+--help, -h 	 default false
+display this help message
+--scene, -s 	 default models/cornell_box.obj
+path to scene obj file
 ```

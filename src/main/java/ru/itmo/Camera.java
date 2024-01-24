@@ -72,7 +72,7 @@ public class Camera {
         rayDirection.sub(raySecondPoint, pos);
         rayDirection.normalize();
 
-        return new Ray(new Point3f(pos), rayDirection, null);
+        return new Ray(new Point3f(pos), rayDirection, new Color3f(1,1,1));
     }
 
     //min index is included; max index is not included

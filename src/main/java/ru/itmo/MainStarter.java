@@ -20,6 +20,7 @@ public class MainStarter {
             }
             System.exit(0);
         }
+        System.out.println("running with parameters: " + appArgs);
         switch (appArgs.getRunMode()){
             case Scene:
                 SceneClient.run(appArgs);

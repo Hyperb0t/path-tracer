@@ -9,6 +9,7 @@ import ru.itmo.Renderer;
 import ru.itmo.Scene;
 import ru.itmo.SceneLoader;
 import ru.itmo.embree.NativeLibsManager;
+import ru.itmo.jcommander.Algorithm;
 import ru.itmo.jcommander.ProgramArguments;
 import ru.itmo.logging.LogConfig;
 
@@ -89,13 +90,26 @@ public class Standalone {
 
         Camera camera = CameraJsonLoader.loadFromScene(programArguments.getScene());
 
-        long time = System.currentTimeMillis();
+        long time = System.currentTimeMillis();;
+        HDRImageRGB image = null;
+        if(programArguments.getAlgorithm().equals(Algorithm.PT)) {
+            time = System.currentTimeMillis();
 
-//        HDRImageRGB image = Renderer.render(scene, camera);
-//        HDRImageRGB image = Renderer.renderParallel(scene, camera, 6);
-//        HDRImageRGB image = Renderer.renderN(scene, camera);
-        HDRImageRGB image = Renderer.renderParallelN(scene, camera, 6, 200);
-//        HDRImageRGB image = Renderer.renderN2(scene, camera);
+//         image = Renderer.render(scene, camera);
+//         image = Renderer.renderParallel(scene, camera, 6);
+//         image = Renderer.renderN(scene, camera);
+             image = Renderer.renderParallelN(scene, camera, 6, 200);
+//         image = Renderer.renderN2(scene, camera);
+        }
+        else if(programArguments.getAlgorithm().equals(Algorithm.PTOPFD)) {
+            for(int i = 1; i < scene.getLightSources().size(); i++) {
+                scene.getLightSources().remove(i);
+            }
+            ru.itmo.ptopfd.Scene ptopfdScene = new ru.itmo.ptopfd.Scene(scene);
+            ptopfdScene.initEmbree();
+            time = System.currentTimeMillis();
+            image = ru.itmo.ptopfd.Renderer.render(ptopfdScene, camera);
+        }
 
         time = System.currentTimeMillis() - time;
         System.out.println("spent " + time + "ms");

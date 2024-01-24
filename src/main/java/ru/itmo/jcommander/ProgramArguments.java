@@ -32,6 +32,9 @@ public class ProgramArguments {
     @Parameter(names = {"--ip", "-i"}, description = "address of Renderer to connect to in Scene mode")
     private String ip = "localhost";
 
+    @Parameter(names = {"--algorithm", "-a"}, description = "Rendering algorith for standalone or renderer mode, one of: pt, ptopfd")
+    private Algorithm algorithm = Algorithm.PT;
+
     public boolean isHelp() {
         return help;
     }
@@ -54,5 +57,22 @@ public class ProgramArguments {
 
     public String getIp() {
         return ip;
+    }
+
+    public Algorithm getAlgorithm() {
+        return algorithm;
+    }
+
+    @Override
+    public String toString() {
+        return "ProgramArguments{" +
+                "help=" + help +
+                ", runMode=" + runMode +
+                ", scene='" + scene + '\'' +
+                ", output='" + output + '\'' +
+                ", port=" + port +
+                ", ip='" + ip + '\'' +
+                ", algorithm=" + algorithm +
+                '}';
     }
 }

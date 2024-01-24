@@ -13,15 +13,16 @@ public class TaskStatUtil {
         freqNum = tasksExpected / 10;
     }
 
-    public TaskStatUtil(int tasksExpected, int reportEveryPercent) {
+    public TaskStatUtil(int tasksExpected, int reportEveryNthPercent) {
         this.tasksExpected = tasksExpected;
-        freqNum = tasksExpected / reportEveryPercent;
+        freqNum = tasksExpected / reportEveryNthPercent;
     }
 
     public void incrementAndInfo() {
         int val = tasksFinished.incrementAndGet();
         if(val % freqNum == 0) {
-            System.out.println("rendering " + (float)val / tasksExpected * 100 + "%");
+//            System.out.println("rendering " + (float)val / tasksExpected * 100 + "%");
+            System.out.printf("rendering %.1f%%\n", (float)val / tasksExpected * 100);
         }
     }
 }

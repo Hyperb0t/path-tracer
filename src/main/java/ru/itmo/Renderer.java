@@ -34,7 +34,7 @@ public class Renderer {
             }
 
             if(h % (camera.getHeight() / 10) == 0) {
-                System.out.println("rendering " + (float)h/camera.getHeight() * 100 + "%");
+                System.out.printf("rendering %.1f%%\n", + (float)h/camera.getHeight() * 100);
             }
         }
         return result;

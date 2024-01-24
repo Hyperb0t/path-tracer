@@ -3,6 +3,7 @@ package ru.itmo.runmode.federated;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.github.ivelate.JavaHDR.HDREncoder;
 import com.github.ivelate.JavaHDR.HDRImageRGB;
 import com.google.protobuf.ByteString;
@@ -17,8 +18,12 @@ import ru.itmo.Renderer;
 import ru.itmo.Scene;
 import ru.itmo.SceneRequest;
 import ru.itmo.StreamingHdrGrpc;
+import ru.itmo.jcommander.Algorithm;
 import ru.itmo.jcommander.ProgramArguments;
+import ru.itmo.serialization.MaterialDeserializer;
+import ru.itmo.serialization.MaterialSerializer;
 
+import javax.media.j3d.Material;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -85,16 +90,41 @@ public class RendererServer {
                             message = "Camera MD5 sum is " + new String(md.digest(bytesOfMessage), "UTF-8");
                             logger.info("<-- " + message);
 
-
-                            ObjectWriter ow = new ObjectMapper().writer();
-                            ObjectReader or = new ObjectMapper().reader();
+                            ObjectMapper om = new ObjectMapper();
+                            SimpleModule simpleModule = new SimpleModule();
+                            simpleModule.addSerializer(Material.class, new MaterialSerializer());
+                            simpleModule.addDeserializer(Material.class, new MaterialDeserializer());
+                            om.registerModule(simpleModule);
+                            ObjectWriter ow = om.writer();
+                            ObjectReader or = om.reader();
                             Scene scene = or.readValue(scene_json, Scene.class);
                             scene.initEmbree();
                             Camera camera = or.readValue(camera_json, Camera.class);
 
                             // Криво, но уже не стал разбираться как в string форматнуть HDRImageRGB
                             // На первый взгляд никак
-                            HDRImageRGB image = Renderer.renderParallelN(scene, camera, 6, 200);
+                            long time = System.currentTimeMillis();
+                            HDRImageRGB image = null;
+                            if(programArguments.getAlgorithm().equals(Algorithm.PT)) {
+                                time = System.currentTimeMillis();
+
+//         image = Renderer.render(scene, camera);
+//         image = Renderer.renderParallel(scene, camera, 6);
+//         image = Renderer.renderN(scene, camera);
+                                image = Renderer.renderParallelN(scene, camera, 6, 200);
+//         image = Renderer.renderN2(scene, camera);
+                            }
+                            else if(programArguments.getAlgorithm().equals(Algorithm.PTOPFD)) {
+                                for(int i = 1; i < scene.getLightSources().size(); i++) {
+                                    scene.getLightSources().remove(i);
+                                }
+                                ru.itmo.ptopfd.Scene ptopfdScene = new ru.itmo.ptopfd.Scene(scene);
+                                ptopfdScene.initEmbree();
+                                time = System.currentTimeMillis();
+                                image = ru.itmo.ptopfd.Renderer.render(ptopfdScene, camera);
+                            }
+
+                            System.out.println("spent " + time + "ms");
                             HDREncoder.writeHDR(image, new File(programArguments.getOutput()));
 
 		      /*

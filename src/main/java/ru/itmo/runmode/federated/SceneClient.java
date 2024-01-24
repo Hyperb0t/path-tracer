@@ -21,6 +21,7 @@ import ru.itmo.SceneRequest;
 import ru.itmo.StreamingHdrGrpc;
 import ru.itmo.embree.NativeLibsManager;
 import ru.itmo.jcommander.ProgramArguments;
+import ru.itmo.serialization.MaterialDeserializer;
 import ru.itmo.serialization.MaterialSerializer;
 
 import javax.media.j3d.Material;
@@ -70,6 +71,7 @@ public class SceneClient {
         ObjectMapper om = new ObjectMapper();
         SimpleModule simpleModule = new SimpleModule();
         simpleModule.addSerializer(Material.class, new MaterialSerializer());
+        simpleModule.addDeserializer(Material.class, new MaterialDeserializer());
         om.registerModule(simpleModule);
         ObjectWriter ow = om.writer();
         return ow.writeValueAsString(scene);
@@ -101,7 +103,7 @@ public class SceneClient {
 
         // Create a channel and a stub
         ManagedChannel channel = ManagedChannelBuilder
-                .forAddress("localhost", 50051)
+                .forAddress(programArguments.getIp(), programArguments.getPort())
                 .usePlaintext()
                 .maxInboundMessageSize(Integer.MAX_VALUE)
                 .build();

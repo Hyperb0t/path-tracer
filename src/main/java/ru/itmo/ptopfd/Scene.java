@@ -1,11 +1,12 @@
-package ru.itmo;
+package ru.itmo.ptopfd;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.sun.j3d.utils.geometry.GeometryInfo;
 import com.sun.j3d.utils.geometry.Triangulator;
 import com.sun.jna.Memory;
 import com.sun.jna.Pointer;
-import ru.itmo.brdfs.Brdf;
+import ru.itmo.LightSource;
+import ru.itmo.Ray;
+import ru.itmo.SceneObject;
 import ru.itmo.embree.Embree;
 import ru.itmo.embree.EmbreeNatives;
 import ru.itmo.embree.RTCIntersectContext;
@@ -14,16 +15,21 @@ import ru.itmo.embree.RTCRayHit;
 import ru.itmo.embree.RTCRayHitNonStruct;
 import ru.itmo.embree.RTCRayNS;
 
-import javax.media.j3d.Material;
 import javax.media.j3d.TriangleArray;
 import javax.vecmath.Color3f;
 import javax.vecmath.Point3f;
 import javax.vecmath.Vector3f;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
+//TODO this class should extend standard scene
 public class Scene {
 
     private List<Point3f> vertices = new ArrayList<>();
@@ -33,16 +39,35 @@ public class Scene {
     private Map<Point3f, Integer> verticesToIndices = new HashMap<>();
     private List<SceneObject> sceneObjects = new ArrayList<>();
     private List<LightSource> lightSources = new ArrayList<>();
+    private List<Light> lights = new ArrayList<>();
     private Pointer embreeDevice = EmbreeNatives.rtcNewDevice(Pointer.NULL);
     private Pointer embreeScene = EmbreeNatives.rtcNewScene(embreeDevice);
 
+    private float maxIntencity;
     private Map<Integer, SceneObject> objectsByGeomId = new HashMap<>();
     public Scene() {
     }
 
-    public Scene(List<SceneObject> sceneObjects, List<LightSource> lightSources) {
+    public Scene(ru.itmo.Scene standardScene) {
+        this.sceneObjects = standardScene.getSceneObjects();
+        this.lightSources = standardScene.getLightSources();
+        this.vertices = standardScene.getVertices();
+        this.verticesToIndices = standardScene.getVerticesToIndices();
+        this.findMaxIntencity();
+    }
+
+    public Scene(List<SceneObject> sceneObjects, List<Light> lightSources) {
+        this.lights = lightSources;
         this.sceneObjects = sceneObjects;
-        this.lightSources = lightSources;
+   //     this.lightSources = lightSources;
+    }
+
+    public float getMaxIntencity() {
+        return this.maxIntencity;
+    }
+
+    public void addLight(Light light) {
+        lights.add(light);
     }
 
     public IntersectionContext intersect(Ray ray) {
@@ -458,36 +483,26 @@ public class Scene {
         return lightSources;
     }
 
-    public Brdf getBrdfForMaterial(Material material) {
-        return null;
+    public List<Light> getLight() {
+        return lights;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Scene scene = (Scene) o;
-        return Objects.equals(vertices, scene.vertices) && Objects.equals(sceneObjects, scene.sceneObjects) && Objects.equals(lightSources, scene.lightSources);
+    public Light getLight(int index) {
+        if (index >= 0 && index < lights.size()) {
+            return lights.get(index);
+        } else {
+            throw new IndexOutOfBoundsException("Invalid light index");
+        }
     }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(vertices, sceneObjects, lightSources);
+    public void findMaxIntencity() {
+        float max = 0.0f;
+        for (Light light : lights) {
+            if (light.getIntensity()>max) {
+                max = light.getIntensity();
+            }
+        }
+        this.maxIntencity = max;
     }
 
-    //Do not use manually! For internal use by Jackson only
-    public void setSceneObjects(List<SceneObject> sceneObjects) {
-        this.sceneObjects = sceneObjects;
-    }
-
-    //Do not use manually! For internal use by Jackson only
-    public void setLightSources(List<LightSource> lightSources) {
-        this.lightSources = lightSources;
-    }
-
-    //Do not use manually! For internal use by ptopfd scene copying constructor only
-    @JsonIgnore
-    public Map<Point3f, Integer> getVerticesToIndices() {
-        return verticesToIndices;
-    }
 }
